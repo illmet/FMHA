@@ -14,7 +14,7 @@ log_file = os.path.join(path, "training_log.txt")
 dataset_path = os.path.join(path, "dataset/CelebA-HQ")
 mask_path = os.path.join(path, "dataset/nvidia_irregular_masks_cleaned")
 #8=15gb, 16=30gb, 32=60gb
-batch_size = 8
+batch_size = 16
 learning_rate = 2 * 10e-4
 num_epochs = 20
 in_channels = 4
