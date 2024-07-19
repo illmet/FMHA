@@ -19,7 +19,7 @@ class CelebADataset(Dataset):
 
         self.image_transform = transforms.Compose(
             [
-                #transforms.Resize((256, 256)),
+                transforms.Resize((256, 256)),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
@@ -27,7 +27,7 @@ class CelebADataset(Dataset):
 
         self.mask_transform = transforms.Compose(
             [
-                transforms.Resize((1024, 1024)),
+                transforms.Resize((256, 256)),
                 BinarizeMask(threshold=0.6),
                 transforms.RandomAffine(degrees=20, scale=(1.2, 1.3)),
                 transforms.ToTensor(),

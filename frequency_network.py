@@ -22,6 +22,7 @@ class MDTA(nn.Module):
         self.project_outf = nn.Conv2d(channels, channels, kernel_size=1, bias=False)
 
 
+
     def forward(self, x, skip):
         #first attention calculation and concatenation
         b, c, h, w = x.shape
@@ -83,7 +84,6 @@ class LunaTransformerEncoderLayer(nn.Module):
         self.feed_forward = GDFN(channels, expansion_factor)
         self.packed_context_layer_norm = nn.LayerNorm(channels)
         self.unpacked_context_layer_norm = nn.LayerNorm(channels)
-        # self.unpacked_context_layer_norm = nn.LayerNorm(channels)
         self.feed_forward_layer_norm = nn.LayerNorm(channels)
 
     def forward(self, x, p):
@@ -182,6 +182,8 @@ class DeformableConv2d(nn.Module):
         return x
 
 class GatedConv2dWithActivation(torch.nn.Module):
+
+
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True,batch_norm=False, activation=torch.nn.LeakyReLU(0.2, inplace=True)):
         super(GatedConv2dWithActivation, self).__init__()
         self.batch_norm = batch_norm
@@ -219,114 +221,158 @@ class GatedDeConv2dWithActivation(torch.nn.Module):
         x = F.interpolate(input, scale_factor=2)
         return self.conv2d(x)
 
+
 class Luna_Net(nn.Module):
     def __init__(self, in_channels, out_channels, factor):
         super(Luna_Net, self).__init__()
 
-        self.p2_Conv1 = GatedConv2dWithActivation(in_channels, 64//factor,  kernel_size=3, stride = 2, padding=1)
-        self.p2_Conv2 = GatedConv2dWithActivation(64//factor,  128//factor, kernel_size=3, stride = 2, padding=1)
-        self.p2_Conv3 = GatedConv2dWithActivation(128//factor, 256//factor, kernel_size=3, stride = 2, padding=1)
-        self.p2_Conv4 = GatedConv2dWithActivation(256//factor, 512//factor, kernel_size=3, stride = 2, padding=1)
-        self.p2_Conv5 = GatedConv2dWithActivation(512//factor, 1024//factor, kernel_size=3, stride = 2, padding=1)
-        self.p2_Conv6 = GatedConv2dWithActivation(1024//factor, 2048//factor, kernel_size=3, stride = 2, padding=1)
+        self.Conv1 = GatedConv2dWithActivation(in_channels, 64//factor,  kernel_size=3, stride = 1, padding=1)
 
-        self.p2_dil_conv1 = GatedConv2dWithActivation(2048//factor, 2048//factor,  kernel_size=3, stride = 1, padding=1)
+        self.Conv2 = GatedConv2dWithActivation(64//factor,  128//factor,   kernel_size=3, stride = 2, padding=1)
+        self.Conv3 = GatedConv2dWithActivation(128//factor, 256//factor,   kernel_size=3, stride = 2, padding=1)
+        self.Conv4 = GatedConv2dWithActivation(256//factor, 512//factor,  kernel_size=3, stride = 2, padding=1)
+        self.Conv5 = GatedConv2dWithActivation(512//factor, 1024//factor,  kernel_size=3, stride = 2, padding=1)
 
-        self.p2_Up6 = GatedDeConv2dWithActivation(2, 2048//factor, 1024//factor, kernel_size=3, padding = 1)
-        self.gmlp_attn1 = LunaTransformerEncoderLayer(1024//factor, 8, 2.33)
-        self.p2_Up_conv6 = GatedConv2dWithActivation(2048//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.dil_conv1 = GatedConv2dWithActivation(1024//factor, 1024//factor, kernel_size=3,  stride = 1, padding=1)
+        #self.dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        #self.dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        #self.dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+
+        self.Up5 = GatedDeConv2dWithActivation(2, 1024//factor, 512//factor, kernel_size=3, padding = 1)
+        self.Up_conv5 = GatedConv2dWithActivation(1024//factor, 512//factor, kernel_size=3, stride =1 , padding=1)
+
+        self.Up4 = GatedDeConv2dWithActivation(2, 512//factor, 256//factor, kernel_size=3, padding = 1)
+        self.Up_conv4 = GatedConv2dWithActivation(512//factor, 256//factor, kernel_size=3, stride = 1, padding=1)
+        
+        self.Up3 = GatedDeConv2dWithActivation(2, 256//factor, 128//factor, kernel_size=3, padding = 1)
+        self.Up_conv3 = GatedConv2dWithActivation(256//factor, 128//factor, kernel_size=3, stride = 1, padding=1)
+        
+        self.Up2 = GatedDeConv2dWithActivation(2, 128//factor, 64//factor, kernel_size=3, padding = 1)
+        self.Up_conv2 = GatedConv2dWithActivation(64//factor, 64//factor, kernel_size=3, stride = 1, padding=1)
+
+        self.Conv_1x1 = nn.Conv2d(64//factor, out_channels, 1)
+
+
+        self.p2_Conv1 = GatedConv2dWithActivation(in_channels, 64//factor,  kernel_size=3, stride = 1, padding=1)
+
+        self.p2_Conv2 = GatedConv2dWithActivation(64//factor,  128//factor,   kernel_size=3, stride = 2, padding=1)
+        self.p2_Conv3 = GatedConv2dWithActivation(128//factor, 256//factor,   kernel_size=3, stride = 2, padding=1)
+        self.p2_Conv4 = GatedConv2dWithActivation(256//factor, 512//factor,  kernel_size=3, stride = 2, padding=1)
+        self.p2_Conv5 = GatedConv2dWithActivation(512//factor, 1024//factor,  kernel_size=3, stride = 2, padding=1)
+
+        self.p2_dil_conv1 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.p2_dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        #self.p2_dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        #self.p2_dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
 
         self.p2_Up5 = GatedDeConv2dWithActivation(2, 1024//factor, 512//factor, kernel_size=3, padding = 1)
-        self.gmlp_attn2 = LunaTransformerEncoderLayer(512//factor, 8, 2.33)
+        self.gmlp_attn1 = LunaTransformerEncoderLayer(512//factor, 8, 2.33)
         self.p2_Up_conv5 = GatedConv2dWithActivation(1024//factor, 512//factor,  kernel_size=3, stride = 1, padding=1)
 
         self.p2_Up4 = GatedDeConv2dWithActivation(2, 512//factor, 256//factor, kernel_size=3, padding = 1)
-        self.gmlp_attn3 = LunaTransformerEncoderLayer(256//factor, 8, 2.33)
+        self.gmlp_attn2 = LunaTransformerEncoderLayer(256//factor, 8, 2.33)
         self.p2_Up_conv4 = GatedConv2dWithActivation(512//factor, 256//factor,  kernel_size=3, stride = 1, padding=1)
         
         self.p2_Up3 = GatedDeConv2dWithActivation(2, 256//factor, 128//factor, kernel_size=3, padding = 1)
-        self.gmlp_attn4 = LunaTransformerEncoderLayer(128//factor, 8, 2.33)
+        self.gmlp_attn3 = LunaTransformerEncoderLayer(128//factor, 8, 2.33)
         self.p2_Up_conv3 = GatedConv2dWithActivation(256//factor, 128//factor,  kernel_size=3, stride = 1, padding=1)
         
         self.p2_Up2 = GatedDeConv2dWithActivation(2, 128//factor, 64//factor, kernel_size=3, padding = 1)
-        self.gmlp_attn5 = LunaTransformerEncoderLayer(64//factor, 8, 2.33)
+        self.gmlp_attn4 = LunaTransformerEncoderLayer(64//factor, 8, 2.33)
         self.p2_Up_conv2 = GatedConv2dWithActivation(128//factor, 64//factor,  kernel_size=3, stride = 1, padding=1)
 
-        self.p2_Up1 = GatedDeConv2dWithActivation(2, 64//factor, 32//factor, kernel_size=3, padding = 1)
-        self.gmlp_attn6 = LunaTransformerEncoderLayer(32//factor, 8, 2.33)
-        self.p2_Up_conv1 = GatedConv2dWithActivation(64//factor, 32//factor,  kernel_size=3, stride = 1, padding=1)
-
-        self.p2_Conv_1x1 = nn.Conv2d(32//factor, out_channels, 1)
+        self.p2_Conv_1x1 = nn.Conv2d(64//factor, out_channels, 1)
 
     def forward(self, in1, in2):
         
-        #Combine the image and mask
+        #Intermediate image
+        
+        #encoding path
         x = torch.cat((in1, in2), dim=1)
+        #print(f"Initial Image: {type(x), x.shape}")
+        x1 = self.Conv1(x)
+        #print(f"First Convolution: {type(x1), x1.shape}")
+        x2 = self.Conv2(x1)
+        #print(f"Second Convolution: {type(x2), x2.shape}")
+        x3 = self.Conv3(x2)
+        #print(f"Third Convolution: {type(x3), x3.shape}")
+        x4 = self.Conv4(x3)
+        #print(f"Fourth Convolution: {type(x4), x4.shape}")
+        x5 = self.Conv5(x4)
+        #print(f"Fifth Convolution: {type(x5), x5.shape}")
+        dil1 = self.dil_conv1(x5)
+        #dil2 = self.dil_conv2(dil1)
+        #dil3 = self.dil_conv3(dil2)
+        #dil4 = self.dil_conv4(dil3)
+
+        #decoding + concat path
+        d5 = self.Up5(dil1)
+        d5 = torch.cat((x4,d5),dim=1)
+        d5 = self.Up_conv5(d5)
+        
+        d4 = self.Up4(d5)
+        d4 = torch.cat((x3,d4),dim=1)
+        d4 = self.Up_conv4(d4)
+
+        d3 = self.Up3(d4)
+        d3 = torch.cat((x2,d3),dim=1)
+        d3 = self.Up_conv3(d3)
+
+        d2 = self.Up2(d3)
+        d2 = self.Up_conv2(d2)
+
+        d1 = self.Conv_1x1(d2)
+
+        #Final image
+        #get a second masked image and concat it
+        second_masked_img = in1 * (1 - in2) + d1 * in2
+        p2_x = torch.cat((second_masked_img,in2),dim=1)
 
         #encoding path
         
-        p2_x1 = self.p2_Conv1(x)
-        #print(f"Image: {p2_x1.shape}")
-
+        p2_x1 = self.p2_Conv1(p2_x)
         p2_x2 = self.p2_Conv2(p2_x1)
-        #print(f"Image: {p2_x2.shape}")
-
         p2_x3 = self.p2_Conv3(p2_x2)
-        #print(f"Image: {p2_x3.shape}")
-
         p2_x4 = self.p2_Conv4(p2_x3)
-        #print(f"Image: {p2_x4.shape}")
-
         p2_x5 = self.p2_Conv5(p2_x4)
-        #print(f"Image: {p2_x5.shape}")
 
-        p2_x6 = self.p2_Conv6(p2_x5)
-        #print(f"Image: {p2_x6.shape}")
+        p2_dil1 = self.p2_dil_conv1(p2_x5)
+        p2_dil2 = self.p2_dil_conv2(p2_dil1)
+        #p2_dil3 = self.p2_dil_conv3(p2_dil2)
+        #p2_dil4 = self.p2_dil_conv4(p2_dil3)
 
-        p2_dil1 = self.p2_dil_conv1(p2_x6)
-        #print(f"Encoder/Decoder shape: {p2_dil1.shape}")
-
-        # decoding + concat path      
-        p2_d6 = self.p2_Up6(p2_dil1)
-        #print(f"p2_d6: {p2_d6.shape}")
-        #print(f"p2_x5: {p2_x5.shape}")
-        o2_x5_skip, p2_x5_skip = self.gmlp_attn1(p2_d6, p2_x5)
-        p2_d6 = torch.cat((o2_x5_skip, p2_x5_skip),dim=1)
-        p2_d6 = self.p2_Up_conv6(p2_d6)
-
-        p2_d5 = self.p2_Up5(p2_d6)
+        # decoding + concat path
+        p2_d5 = self.p2_Up5(p2_dil2)
         #print(f"p2_d5: {p2_d5.shape}")
         #print(f"p2_x4: {p2_x4.shape}")
-        o2_x4_skip, p2_x4_skip = self.gmlp_attn2(p2_d5, p2_x4)
+        o2_x4_skip, p2_x4_skip = self.gmlp_attn1(p2_d5, p2_x4)
         p2_d5 = torch.cat((o2_x4_skip, p2_x4_skip),dim=1)
         p2_d5 = self.p2_Up_conv5(p2_d5)
         
+
         p2_d4 = self.p2_Up4(p2_d5)
         #print(f"p2_d4: {p2_d4.shape}")
         #print(f"p2_x3: {p2_x3.shape}")
-        o2_x3_skip, p2_x3_skip = self.gmlp_attn3(p2_d4, p2_x3)
+        o2_x3_skip, p2_x3_skip = self.gmlp_attn2(p2_d4, p2_x3)
         p2_d4 = torch.cat((o2_x3_skip, p2_x3_skip),dim=1)
         p2_d4 = self.p2_Up_conv4(p2_d4)
 
         p2_d3 = self.p2_Up3(p2_d4)
         #print(f"p2_d3: {p2_d3.shape}")
         #print(f"p2_x2: {p2_x2.shape}")
-        o2_x2_skip, p2_x2_skip = self.gmlp_attn4(p2_d3, p2_x2)
+        o2_x2_skip, p2_x2_skip = self.gmlp_attn3(p2_d3, p2_x2)
         p2_d3 = torch.cat((o2_x2_skip, p2_x2_skip),dim=1)
         p2_d3 = self.p2_Up_conv3(p2_d3)
 
         p2_d2 = self.p2_Up2(p2_d3)
         #print(f"p2_d2: {p2_d2.shape}")
         #print(f"p2_x1: {p2_x1.shape}")
-        o2_x1_skip, p2_x1_skip = self.gmlp_attn5(p2_d2, p2_x1)
+        o2_x1_skip, p2_x1_skip = self.gmlp_attn4(p2_d2, p2_x1)
         p2_d2 = torch.cat((o2_x1_skip, p2_x1_skip),dim=1)
         p2_d2 = self.p2_Up_conv2(p2_d2)
+        #print(f"p2_d2: {p2_d2.shape}")
 
-        #add shit here
-        p2_d1 = self.p2_Up1(p2_d2)
+        p2_d1 = self.p2_Conv_1x1(p2_d2)
         #print(f"p2_d1: {p2_d1.shape}")
 
-        p2_d0 = self.p2_Conv_1x1(p2_d1)
-        #print(f"p2_d0: {p2_d0.shape}")
-
-        return p2_d0
+        return d1, p2_d1
