@@ -48,8 +48,8 @@ class MDTA(nn.Module):
         vf = vf.reshape(b, self.num_heads, -1, h * w)
         qf, kf = F.normalize(qf, dim=-1), F.normalize(kf, dim=-1)
         attnf = torch.softmax(torch.matmul(qf, k.transpose(-2, -1).contiguous()) * self.temperature, dim=-1)
-        outf = self.project_outf(torch.matmul(attn, vf).reshape(b, -1, h, w))
-        return outf, skip
+        outf = self.project_outf(torch.matmul(attnf, vf).reshape(b, -1, h, w))
+        return outf, qf
 
 class Nested_MDTA(nn.Module):
     def __init__(self, channels, num_heads):
