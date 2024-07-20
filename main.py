@@ -4,7 +4,7 @@ import time
 import os
 
 from dataloader import CelebADataset
-from longer_network import Luna_Net
+from frequency_network import Luna_Net
 from discriminator import Discriminator
 from loss import CombinedLoss
 
