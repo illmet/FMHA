@@ -301,12 +301,12 @@ class Luna_Net(nn.Module):
         x5 = self.Conv5(x4)
         #print(f"Fifth Convolution: {type(x5), x5.shape}")
         dil1 = self.dil_conv1(x5)
-        #dil2 = self.dil_conv2(dil1)
+        dil2 = self.dil_conv2(dil1)
         #dil3 = self.dil_conv3(dil2)
         #dil4 = self.dil_conv4(dil3)
 
         #decoding + concat path
-        d5 = self.Up5(dil1)
+        d5 = self.Up5(dil2)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_conv5(d5)
         
