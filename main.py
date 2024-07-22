@@ -77,7 +77,7 @@ for epoch in range(start_epoch, num_epochs):
         start_time = time.time()
         images, targets, masks = images.to(device), targets.to(device), masks.to(device)
 
-        outputs = gen(images, masks)
+        _, outputs = gen(images, masks)
 
         # Generator
         discriminator_output_on_generated = disc(outputs)
