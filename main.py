@@ -13,6 +13,7 @@ path = os.path.dirname(os.path.abspath(__file__))
 log_file = os.path.join(path, "training_log.txt")
 dataset_path = os.path.join(path, "dataset/CelebA-HQ")
 mask_path = os.path.join(path, "dataset/nvidia_irregular_masks_cleaned")
+os.makedirs("results", exist_ok=True)
 batch_size = 128
 learning_rate = 2 * 10e-4
 num_epochs = 200
