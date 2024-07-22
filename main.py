@@ -126,6 +126,21 @@ for epoch in range(start_epoch, num_epochs):
 
     avg_train_loss = epoch_loss / len(train_loader)
 
+    #losses logging 
+    epoch_end_time = time.time()
+    epoch_time = (epoch_end_time - epoch_start_time) / 60
+
+    #save the state of the model every epoch
+    torch.save(
+        {
+            "epoch": epoch,
+            "gen_state_dict": gen.state_dict(),
+            "disc_state_dict": disc.state_dict(),
+            "optimizer_G_state_dict": optimizer_G.state_dict(),
+            "optimizer_D_state_dict": optimizer_D.state_dict(),
+        },
+        checkpoint_path,
+    )
     #Validation
     if (epoch + 1) % 1 == 0:
         gen.eval()
@@ -147,24 +162,9 @@ for epoch in range(start_epoch, num_epochs):
                     image.unsqueeze(0).to(device), mask.unsqueeze(0).to(device)
                 )
                 inpainted_img = inpainted_img.squeeze(0).cpu().detach()
-
-    #losses logging 
-    epoch_end_time = time.time()
-    epoch_time = (epoch_end_time - epoch_start_time) / 60
-
+        
     # Log the results
     with open(log_file, 'a') as f:
         f.write(f"Epoch [{epoch+1}/{num_epochs}], Avg Train Loss: {avg_train_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Epoch Time: {epoch_time:.2f} mins\n")
 
-    #save the state of the model every epoch
-    torch.save(
-        {
-            "epoch": epoch,
-            "gen_state_dict": gen.state_dict(),
-            "disc_state_dict": disc.state_dict(),
-            "optimizer_G_state_dict": optimizer_G.state_dict(),
-            "optimizer_D_state_dict": optimizer_D.state_dict(),
-        },
-        checkpoint_path,
-    )
 print("Training completed.")
