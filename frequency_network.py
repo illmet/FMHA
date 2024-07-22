@@ -234,7 +234,7 @@ class Luna_Net(nn.Module):
         self.Conv5 = GatedConv2dWithActivation(512//factor, 1024//factor,  kernel_size=3, stride = 2, padding=1)
 
         self.dil_conv1 = GatedConv2dWithActivation(1024//factor, 1024//factor, kernel_size=3,  stride = 1, padding=1)
-        #self.dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
         #self.dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
         #self.dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
 
