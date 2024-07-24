@@ -10,15 +10,14 @@ class MDTA(nn.Module):
         self.num_heads = num_heads
         self.temperature = nn.Parameter(torch.ones(1, num_heads, 1, 1))
         self.qkv = nn.Conv2d(channels, channels * 3, kernel_size=1, bias=False)
-        self.qkv_conv = nn.Conv2d(channels * 3, channels * 3, kernel_size=3, padding=1, groups=channels * 3, bias=False)
+        self.qkv_conv = DeformableConv2d(channels * 3, channels * 3, kernel_size=3, padding=1, bias=False) 
         self.project_out = nn.Conv2d(channels, channels, kernel_size=1, bias=False)
     
         #frequency
-    
         self.kv = nn.Conv2d(channels, channels * 2, kernel_size=1, bias=False)
         self.q1X1_1 = nn.Conv2d(channels, channels , kernel_size=1, bias=False)
         self.q1X1_2 = nn.Conv2d(channels, channels , kernel_size=1, bias=False)
-        self.kv_conv = nn.Conv2d(channels * 2, channels * 2, kernel_size=3, padding=1, groups=channels * 2, bias=False)
+        self.kv_conv = DeformableConv2d(channels * 2, channels * 2, kernel_size=3, padding=1, bias=False)
         self.project_outf = nn.Conv2d(channels, channels, kernel_size=1, bias=False)
 
 
@@ -41,7 +40,7 @@ class MDTA(nn.Module):
         x_fft3=self.q1X1_2(x_fft2)
         qf=fft.ifftn(x_fft3,dim=(-2, -1)).real
 
-        #idk???
+        #second (frequency) attention calculation and concatenation
         kf, vf = self.kv_conv(self.kv(out)).chunk(2, dim=1)
         qf = qf.reshape(b, self.num_heads, -1, h * w)
         kf = kf.reshape(b, self.num_heads, -1, h * w)
