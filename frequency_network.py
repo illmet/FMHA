@@ -22,7 +22,7 @@ class MDTA(nn.Module):
 
 
 
-    def forward(self, x, skip):
+    def forward(self, x, y):
         #first attention calculation and concatenation
         b, c, h, w = x.shape
         q, k, v = self.qkv_conv(self.qkv(x)).chunk(3, dim=1)
@@ -34,7 +34,7 @@ class MDTA(nn.Module):
         out = self.project_out(torch.matmul(attn, v).reshape(b, -1, h, w))
   
         #FDFP
-        x_fft = fft.fftn(x, dim=(-2, -1)).real
+        x_fft = fft.fftn(y, dim=(-2, -1)).real
         x_fft1=self.q1X1_1(x_fft)
         x_fft2=F.gelu(x_fft1)
         x_fft3=self.q1X1_2(x_fft2)
