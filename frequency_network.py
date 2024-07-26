@@ -9,23 +9,25 @@ class MDTA(nn.Module):
         super(MDTA, self).__init__()
         self.num_heads = num_heads
         self.temperature = nn.Parameter(torch.ones(1, num_heads, 1, 1))
-        self.qkv = nn.Conv2d(channels, channels * 3, kernel_size=1, bias=False)
-        self.qkv_conv = DeformableConv2d(channels * 3, channels * 3, kernel_size=3, padding=1, bias=False) 
+        self.kv1 = nn.Conv2d(channels, channels * 2, kernel_size=1, bias=False)
+        self.kv_conv1 = DeformableConv2d(channels * 2, channels * 2, kernel_size=3, padding=1, bias=False)        
+        #self.qkv = nn.Conv2d(channels, channels * 3, kernel_size=1, bias=False)
+        #self.qkv_conv = DeformableConv2d(channels * 3, channels * 3, kernel_size=3, padding=1, bias=False) 
         self.project_out = nn.Conv2d(channels, channels, kernel_size=1, bias=False)
     
         #frequency
-        self.kv = nn.Conv2d(channels, channels * 2, kernel_size=1, bias=False)
+        self.kv2 = nn.Conv2d(channels, channels * 2, kernel_size=1, bias=False)
+        self.kv_conv2 = DeformableConv2d(channels * 2, channels * 2, kernel_size=3, padding=1, bias=False)
         self.q1X1_1 = nn.Conv2d(channels, channels , kernel_size=1, bias=False)
         self.q1X1_2 = nn.Conv2d(channels, channels , kernel_size=1, bias=False)
-        self.kv_conv = DeformableConv2d(channels * 2, channels * 2, kernel_size=3, padding=1, bias=False)
         self.project_outf = nn.Conv2d(channels, channels, kernel_size=1, bias=False)
 
 
 
-    def forward(self, x, _):
+    def forward(self, x, q):
         #first attention calculation and concatenation
         b, c, h, w = x.shape
-        q, k, v = self.qkv_conv(self.qkv(x)).chunk(3, dim=1)
+        k, v = self.kv_conv1(self.kv1(x)).chunk(2, dim=1)
         q = q.reshape(b, self.num_heads, -1, h * w)
         k = k.reshape(b, self.num_heads, -1, h * w)
         v = v.reshape(b, self.num_heads, -1, h * w)
@@ -41,7 +43,7 @@ class MDTA(nn.Module):
         qf=fft.ifftn(x_fft3,dim=(-2, -1)).real
 
         #second (frequency) attention calculation and concatenation
-        kf, vf = self.kv_conv(self.kv(out)).chunk(2, dim=1)
+        kf, vf = self.kv_conv2(self.kv2(out)).chunk(2, dim=1)
         qf = qf.reshape(b, self.num_heads, -1, h * w)
         kf = kf.reshape(b, self.num_heads, -1, h * w)
         vf = vf.reshape(b, self.num_heads, -1, h * w)
