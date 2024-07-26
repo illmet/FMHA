@@ -25,7 +25,7 @@ class MDTA(nn.Module):
     def forward(self, x, q):
         #first attention calculation and concatenation
         b, c, h, w = x.shape
-        q, k, v = self.qkv_conv(self.qkv(x)).chunk(3, dim=1)
+        k, v = self.qkv_conv(self.qkv(x)).chunk(3, dim=1)
         q = q.reshape(b, self.num_heads, -1, h * w)
         k = k.reshape(b, self.num_heads, -1, h * w)
         v = v.reshape(b, self.num_heads, -1, h * w)
