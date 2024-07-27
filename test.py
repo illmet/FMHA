@@ -4,8 +4,6 @@ import os
 import torch
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
-import numpy as np
-import matplotlib.pyplot as plt
 
 from dataloader import CelebADataset
 
@@ -15,7 +13,7 @@ from frequency_network import Luna_Net
 #from network_luna_bottleneck import Luna_Net
 
 #hyperparameters
-batch_size = 16
+batch_size = 64
 path = os.path.dirname(os.path.abspath(__file__))
 dataset_path = os.path.join(path, "dataset/CelebA-HQ")
 mask_path = os.path.join(path, "dataset/masks_classified")
