@@ -10,10 +10,10 @@ from loss import CombinedLoss
 
 #hyperparameters
 path = os.path.dirname(os.path.abspath(__file__))
-log_file = os.path.join(path, "training_log.txt")
 dataset_path = os.path.join(path, "dataset/CelebA-HQ")
 mask_path = os.path.join(path, "dataset/nvidia_irregular_masks_cleaned")
 os.makedirs("results", exist_ok=True)
+log_file = os.path.join(path, "results/training_log.txt")
 batch_size = 128
 learning_rate = 2 * 10e-4
 num_epochs = 200
@@ -57,7 +57,7 @@ optimizer_G = torch.optim.Adam(gen.parameters(), lr=learning_rate, betas=(0.5, 0
 optimizer_D = torch.optim.Adam(disc.parameters(), lr=learning_rate)
 
 #load the checkpoints if exist
-checkpoint_path = "results/third_latest.pth"
+checkpoint_path = os.path.join(path, "results/third_latest.pth")
 if os.path.isfile(checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
     gen.load_state_dict(checkpoint["gen_state_dict"])
