@@ -236,8 +236,8 @@ class Luna_Net(nn.Module):
 
         self.dil_conv1 = GatedConv2dWithActivation(1024//factor, 1024//factor, kernel_size=3,  stride = 1, padding=1)
         self.dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
-        #self.dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
-        #self.dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
 
         self.Up5 = GatedDeConv2dWithActivation(2, 1024//factor, 512//factor, kernel_size=3, padding = 1)
         self.Up_conv5 = GatedConv2dWithActivation(1024//factor, 512//factor, kernel_size=3, stride =1 , padding=1)
@@ -263,8 +263,8 @@ class Luna_Net(nn.Module):
 
         self.p2_dil_conv1 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
         self.p2_dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
-        #self.p2_dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
-        #self.p2_dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.p2_dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.p2_dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
 
         self.p2_Up5 = GatedDeConv2dWithActivation(2, 1024//factor, 512//factor, kernel_size=3, padding = 1)
         self.gmlp_attn1 = LunaTransformerEncoderLayer(512//factor, 8, 2.33)
@@ -303,11 +303,11 @@ class Luna_Net(nn.Module):
         #print(f"Fifth Convolution: {type(x5), x5.shape}")
         dil1 = self.dil_conv1(x5)
         dil2 = self.dil_conv2(dil1)
-        #dil3 = self.dil_conv3(dil2)
-        #dil4 = self.dil_conv4(dil3)
+        dil3 = self.dil_conv3(dil2)
+        dil4 = self.dil_conv4(dil3)
 
         #decoding + concat path
-        d5 = self.Up5(dil2)
+        d5 = self.Up5(dil4)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_conv5(d5)
         
@@ -339,11 +339,11 @@ class Luna_Net(nn.Module):
 
         p2_dil1 = self.p2_dil_conv1(p2_x5)
         p2_dil2 = self.p2_dil_conv2(p2_dil1)
-        #p2_dil3 = self.p2_dil_conv3(p2_dil2)
-        #p2_dil4 = self.p2_dil_conv4(p2_dil3)
+        p2_dil3 = self.p2_dil_conv3(p2_dil2)
+        p2_dil4 = self.p2_dil_conv4(p2_dil3)
 
         # decoding + concat path
-        p2_d5 = self.p2_Up5(p2_dil2)
+        p2_d5 = self.p2_Up5(p2_dil4)
         #print(f"p2_d5: {p2_d5.shape}")
         #print(f"p2_x4: {p2_x4.shape}")
         o2_x4_skip, p2_x4_skip = self.gmlp_attn1(p2_d5, p2_x4)
