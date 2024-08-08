@@ -66,20 +66,6 @@ class CelebADataset(Dataset):
         return corrupted_image, image, mask
 
 
-#def show_image(image, title="Masked Image"):
-    """Helper function to display a single image."""
-    # Convert image tensor to numpy and denormalize
-    #image = image.numpy().transpose((1, 2, 0))
-    #mean = [0.5, 0.5, 0.5]
-    #std = [0.5, 0.5, 0.5]
-    #image = image * std + mean
-    #image = np.clip(image, 0, 1)
-    #plt.imshow(image)
-    #plt.title(title)
-    #plt.axis("off")
-    #plt.show()
-
-
 if __name__ == "__main__":
     dataset = CelebADataset(
         image_dir="dataset/CelebA-HQ", 
