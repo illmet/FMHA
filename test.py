@@ -52,7 +52,7 @@ else:
 
 total_psnr, total_ssim, total_l1 = 0, 0, 0
 
-#????????
+#metric computation
 def compute_metrics(corrupted_batch, normal_batch):
     psnr, ssim, l1_norm = 0, 0, 0
 
@@ -103,18 +103,6 @@ for corrupted_image, normal_image, masks in test_loader:
             image.unsqueeze(0).to(device), mask.unsqueeze(0).to(device)
         )
         inpainted_img = inpainted_img.squeeze(0).cpu().detach()
-        #plt.figure()
-        #plt.subplot(1, 3, 1)
-        #plt.imshow(np.transpose(image.cpu().numpy(), (1, 2, 0)))
-        #plt.title("Corrupted Image")
-        #plt.subplot(1, 3, 2)
-        #plt.imshow(np.transpose(inpainted_img.numpy(), (1, 2, 0)))
-        #plt.title("Inpainted Image")
-        #plt.subplot(1, 3, 3)
-        #plt.imshow(np.transpose(target.numpy(), (1, 2, 0)))
-        #plt.title("Ground Truth")
-        #plt.savefig(f"result_image_{i}.png")
-        #plt.close()
         result += 1
 
 num_images = len(test_loader)
