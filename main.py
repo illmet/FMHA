@@ -21,8 +21,7 @@ log_file = os.path.join(path, "results/training_log.txt")
 #hyperparameters
 #change the batch size depending on available GPU,
 #best for 4090: 45
-#best for A4000 (or any 16gb gpu): 30
-batch_size = 30
+batch_size = 16
 learning_rate = 4 * 10e-5
 num_epochs = 170
 in_channels = 4
