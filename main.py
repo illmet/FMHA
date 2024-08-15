@@ -8,15 +8,23 @@ from frequency_network import Luna_Net
 from discriminator import Discriminator
 from loss import CombinedLoss
 
-#hyperparameters
+#old path
+#os.chdir("users/pgrad/meti/Downloads")
+#path = os.getcwd()#
+#change path for convenience
 path = os.path.dirname(os.path.abspath(__file__))
 dataset_path = os.path.join(path, "dataset/CelebA-HQ")
 mask_path = os.path.join(path, "dataset/nvidia_irregular_masks_cleaned")
 os.makedirs("results", exist_ok=True)
 log_file = os.path.join(path, "results/training_log.txt")
-batch_size = 45
+
+#hyperparameters
+#change the batch size depending on available GPU,
+#best for 4090: 45
+#best for A4000 (or any 16gb gpu): 32
+batch_size = 32
 learning_rate = 4 * 10e-5
-num_epochs = 150
+num_epochs = 170
 in_channels = 4
 out_channels = 3
 factor = 8

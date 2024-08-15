@@ -7,16 +7,20 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 from skimage.color import rgb2ycbcr
 import numpy as np
 import matplotlib.pyplot as plt
-from dataloader_test import CelebADataset
+from dataloader import CelebADataset
 
 from frequency_network import Luna_Net
 
+#old path
+#os.chdir("/users/pgrad/meti/Downloads")
+#path = os.getcwd()
+#change path for convenience
+path = os.path.dirname(os.path.abspath(__file__))
+dataset_path = os.path.join(path, "dataset/medium_images")
+mask_path = os.path.join(path, "dataset/medium_masks")
+
 #hyperparameters
 batch_size = 16
-os.chdir("/users/pgrad/meti/Downloads")
-path = os.getcwd()
-dataset_path = os.path.join(path, "dataset/CelebA-HQ")
-mask_path = os.path.join(path, "dataset/masks_classified/0-20")
 in_channels = 4
 out_channels = 3
 factor = 8
@@ -42,7 +46,7 @@ gen = Luna_Net(in_channels=in_channels, out_channels=out_channels, factor=factor
 gen.to(device)
 
 #checkpoints
-checkpoint_path = "Dissertation/tests/inference/cloud_latest_150e_4_105_2.pth"
+checkpoint_path = "frequency_latest.pth"
 if os.path.isfile(checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
     gen.load_state_dict(checkpoint["gen_state_dict"])
