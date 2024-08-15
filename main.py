@@ -4,13 +4,13 @@ import time
 import os
 
 from dataloader import CelebADataset
-from frequency_network import Luna_Net
+from frequency_network_2 import Luna_Net
 from discriminator import Discriminator
 from loss import CombinedLoss
 
 #old path
-#os.chdir("users/pgrad/meti/Downloads")
-#path = os.getcwd()#
+#os.chdir("/users/pgrad/meti/Downloads")
+#path = os.getcwd()
 #change path for convenience
 path = os.path.dirname(os.path.abspath(__file__))
 dataset_path = os.path.join(path, "dataset/CelebA-HQ")
