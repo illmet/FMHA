@@ -9,21 +9,13 @@ This project provides two main implementations for image inpainting: **Simplifie
 1. **Download the dataset:**
    [https://drive.google.com/drive/folders/1fxrBKYsuFCT6NI2pPgWQN9NloqSdCfMg?usp=drive_link]
 
-2. **Data Setup:** Place the downloaded dataset folders under the `dataset` directory in the project root, for both implementations.  Your project directory should look like this:
+2. **Data Setup:** Place the downloaded dataset folders under the `dataset` directory, like so:
 
-Simplified/
-├── dataset/
-│   ├── ...
-│   └── ...
-└── ...
+Simplified/dataset/
 
 or
 
-Frequency/
-├── dataset/
-│   ├── ...
-│   └── ...
-└── ...
+Frequency/dataset/
 
 
 3. **Learning Rate Adjustment:** Adjust the learning rate in the training script based on your GPU. If you have a GPU with >40GB VRAM, consider changing the learning rate accordingly.
@@ -35,7 +27,7 @@ Frequency/
 
 ### Inference
 
-1. **Download Medium Images and Masks:** Download a set of medium-sized images and corresponding masks from the dataset link above.
+1. **Download the medium-sized sample:** Download a set of medium-sized images and corresponding masks (in the range of 0.2-0.4) using the same dataset link as above.
 
 2. **Place Data in Dataset Folder:** Place these downloaded images and masks under the `dataset` directory.
 
