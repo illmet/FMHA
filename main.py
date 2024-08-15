@@ -91,19 +91,16 @@ for epoch in range(start_epoch, num_epochs):
         generator_loss.backward()
         optimizer_G.step()
 
-        # Discriminator
         discriminator_output_on_real = disc(targets)
         discriminator_real_loss = criterion.gan_loss(discriminator_output_on_real, True)
-
-        # Discriminator loss for fake (generated) images
         discriminator_output_on_generated = disc(
             outputs.detach() 
-        )  # detach to avoid backprop to generator
+        ) 
         discriminator_fake_loss = criterion.gan_loss(
             discriminator_output_on_generated, False
         )
 
-        # Total discriminator loss
+        #total discriminator loss
         discriminator_loss = discriminator_real_loss + discriminator_fake_loss
 
         optimizer_D.zero_grad()
@@ -151,7 +148,7 @@ for epoch in range(start_epoch, num_epochs):
             for images, targets, masks in test_loader:
                 images, targets, masks = images.to(device), targets.to(device), masks.to(device)
                 _, outputs = gen(images, masks)
-                loss = criterion(outputs, targets, None, False)  # We don't need discriminator output for validation
+                loss = criterion(outputs, targets, None, False)
                 val_loss += loss.item()
         avg_val_loss = val_loss / len(test_loader)
         #save the image examples for the trained model every epoch
@@ -164,7 +161,6 @@ for epoch in range(start_epoch, num_epochs):
                 )
                 inpainted_img = inpainted_img.squeeze(0).cpu().detach()
         
-    # Log the results
     with open(log_file, 'a') as f:
         f.write(f"Epoch [{epoch+1}/{num_epochs}], Avg Train Loss: {avg_train_loss:.4f}, Validation Loss: {avg_val_loss:.4f}, Epoch Time: {epoch_time:.2f} mins\n")
 

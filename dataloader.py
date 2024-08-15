@@ -4,8 +4,15 @@ from PIL import Image, ImageFilter
 import os
 import random
 import numpy as np
-from utils import BinarizeMask
 
+class BinariseMask(object):
+    def __init__(self, threshold=0.6):
+        self.threshold = threshold
+
+    def __call__(self, mask):
+        mask_array = np.array(mask) / 255.0
+        binarised = (mask_array > self.threshold).astype(np.uint8) * 255
+        return Image.fromarray(binarised)
 
 class CelebADataset(Dataset):
     def __init__(self, image_dir, mask_dir, dilation_range=(9, 49)):
@@ -20,15 +27,13 @@ class CelebADataset(Dataset):
             [
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
         )
 
         self.mask_transform = transforms.Compose(
             [
                 transforms.Resize((256, 256)),
-                BinarizeMask(threshold=0.6),
-                transforms.RandomAffine(degrees=20, scale=(1.2, 1.3)),
+                BinariseMask(threshold=0.6),
                 transforms.ToTensor(),
             ]
         )

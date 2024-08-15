@@ -5,7 +5,6 @@ class Discriminator(nn.Module):
     def __init__(self, input_nc=3, ndf=64, norm_layer=nn.BatchNorm2d):
         super(Discriminator, self).__init__()
 
-        # Can use for InstancenNorm2d
         use_bias = False
 
         self.conv1 = nn.Conv2d(input_nc, ndf, kernel_size=4, stride=2, padding=1)

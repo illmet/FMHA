@@ -4,19 +4,19 @@ import os
 import torch
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
-
-from dataloader import CelebADataset
+from skimage.color import rgb2ycbcr
+import numpy as np
+import matplotlib.pyplot as plt
+from dataloader_test import CelebADataset
 
 from frequency_network import Luna_Net
-#from simplified_network import Luna_Net
-#from mamba_nework import Luna_Net
-#from network_luna_bottleneck import Luna_Net
 
 #hyperparameters
 batch_size = 16
-path = os.path.dirname(os.path.abspath(__file__))
+os.chdir("/users/pgrad/meti/Downloads")
+path = os.getcwd()
 dataset_path = os.path.join(path, "dataset/CelebA-HQ")
-mask_path = os.path.join(path, "dataset/masks_classified")
+mask_path = os.path.join(path, "dataset/masks_classified/0-20")
 in_channels = 4
 out_channels = 3
 factor = 8
@@ -41,8 +41,8 @@ print(device)
 gen = Luna_Net(in_channels=in_channels, out_channels=out_channels, factor=factor)
 gen.to(device)
 
-#get the checkpoints
-checkpoint_path = os.path.join(path, "results/cloud_latest.pth")
+#checkpoints
+checkpoint_path = "Dissertation/tests/inference/cloud_latest_150e_4_105_2.pth"
 if os.path.isfile(checkpoint_path):
     checkpoint = torch.load(checkpoint_path)
     gen.load_state_dict(checkpoint["gen_state_dict"])
@@ -52,16 +52,17 @@ else:
 
 total_psnr, total_ssim, total_l1 = 0, 0, 0
 
-#metric computation
+#metrics computation
 def compute_metrics(corrupted_batch, normal_batch):
     psnr, ssim, l1_norm = 0, 0, 0
 
     corrupted_batch = corrupted_batch.permute(0, 2, 3, 1).cpu().detach().numpy()
     normal_batch = normal_batch.permute(0, 2, 3, 1).cpu().detach().numpy()
 
-    for corrupted, normal in zip(corrupted_batch, normal_batch):
-        normal = normal * 255
-        corrupted = corrupted * 255
+    corrupted_y = np.array([rgb2ycbcr(image)[:,:,0] for image in corrupted_batch])
+    normal_y = np.array([rgb2ycbcr(image)[:,:,0] for image in normal_batch])
+
+    for corrupted, normal in zip(corrupted_y, normal_y):
 
         # PSNR
         psnr += peak_signal_noise_ratio(
@@ -72,7 +73,7 @@ def compute_metrics(corrupted_batch, normal_batch):
         ssim += structural_similarity(
             normal.astype(np.uint8),
             corrupted.astype(np.uint8),
-            multichannel=True,
+            #multichannel=True,
             channel_axis=2,
         )
 
@@ -88,6 +89,9 @@ def compute_metrics(corrupted_batch, normal_batch):
 
 
 result = 1
+inpainted_images = []
+ground_truth_images = []
+
 for corrupted_image, normal_image, masks in test_loader:
     _, outputs = gen(corrupted_image.to(device), masks.to(device))
     psnr, ssim, l1_norm = compute_metrics(outputs, normal_image.to(device))
