@@ -7,22 +7,24 @@ This project provides two main implementations for image inpainting: **Simplifie
 ### Training
 
 1. **Download the dataset:**
-   [Link to Dataset]
+   [https://drive.google.com/drive/folders/1fxrBKYsuFCT6NI2pPgWQN9NloqSdCfMg?usp=drive_link]
 
 2. **Data Setup:** Place the downloaded dataset folders under the `dataset` directory in the project root, for both implementations.  Your project directory should look like this:
 
 Simplified/
 ├── dataset/
-│ ├── ...
-│ └── ...
+│   ├── ...
+│   └── ...
 └── ...
+
 
 or
 
+
 Frequency/
 ├── dataset/
-│ ├── ...
-│ └── ...
+│   ├── ...
+│   └── ...
 └── ...
 
 
@@ -30,6 +32,7 @@ Frequency/
 
 
 4. **Start the training run with the following command:**
+
 ```python3 main.py```
 
 ### Inference
@@ -38,6 +41,10 @@ Frequency/
 
 2. **Place Data in Dataset Folder:** Place these downloaded images and masks under the `dataset` directory.
 
-3. **Run inference with the following command:**
+3. **Download Checkpoints:**
+    [https://drive.google.com/drive/folders/1cTqxXHxRPgYSPpTTFC74pAEhPbBCoEah?usp=drive_link]
+
+
+4. **Run inference with the following command:**
 
 ```python3 test.py```
