@@ -42,12 +42,10 @@ class CelebADataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        # Load image
         img_name = self.images[idx]
         img_path = os.path.join(self.image_dir, img_name)
         image = Image.open(img_path).convert("RGB")
 
-        # Load a random mask
         mask = None
 
         while mask is None:
@@ -59,7 +57,6 @@ class CelebADataset(Dataset):
             except:
                 continue
 
-        # Transform
         seed = np.random.randint(2147483647)
         random.seed(seed)
         image = self.image_transform(image)
@@ -80,4 +77,3 @@ if __name__ == "__main__":
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
     image, _ = next(iter(dataloader))
-    #show_image(image[0])
