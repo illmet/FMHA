@@ -57,7 +57,7 @@ class CelebADataset(Dataset):
             except:
                 continue
 
-        seed = np.random.randint(2147483647)
+        seed = np.random.randint(42)
         random.seed(seed)
         image = self.image_transform(image)
         random.seed(seed)

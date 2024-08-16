@@ -28,15 +28,18 @@ factor = 8
 #data loading
 dataset = CelebADataset(image_dir=dataset_path, mask_dir=mask_path)
 dataset_size = len(dataset)
-train_size = int(0.9 * dataset_size)
-test_size = dataset_size - train_size
-#indexing
-indices = list(range(dataset_size))
-train_indices = indices[:train_size]
-test_indices = indices[train_size:]
+test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
-_, test_dataset = Subset(dataset, train_indices), Subset(dataset, test_indices)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+#uncomment this for full dataset checking
+#dataset = CelebADataset(image_dir=dataset_path, mask_dir=mask_path)
+#dataset_size = len(dataset)
+#train_size = int(0.9 * dataset_size)
+#test_size = dataset_size - train_size
+#indices = list(range(dataset_size))
+#train_indices = indices[:train_size]
+#test_indices = indices[train_size:]
+#_, test_dataset = Subset(dataset, train_indices), Subset(dataset, test_indices)
+#test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
