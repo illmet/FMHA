@@ -6,7 +6,7 @@ This project involves solving image inpainting, or filling corrupted images with
 
 ![Image](images/FinalArch.png)  
 
-Here are some of the examples of inference of the current model. On the left there is an input image (with the mask applied), inpainted image in the middle and model output is on the right.
+Here are some of the examples of inference for the current model. On the left there is an input image (with the mask applied), model output in the middle and the original image is on the right.
 
 ![Image](images/f1.png)  
 
@@ -37,8 +37,7 @@ Either separate the masks into proportions (make sure you're only using last thr
 
 2. **Place Data in Dataset Folder:** Place these images and masks under the `dataset` directory.
 
-3. **Download Checkpoints:**
-    [https://drive.google.com/drive/folders/1cTqxXHxRPgYSPpTTFC74pAEhPbBCoEah?usp=drive_link]
+3. **Download Checkpoints:** [Here](https://drive.google.com/drive/folders/1cTqxXHxRPgYSPpTTFC74pAEhPbBCoEah?usp=drive_link)
 
 
 4. **Run inference with the following command:**
