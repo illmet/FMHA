@@ -16,8 +16,7 @@ The original dissertation contains two main implementations for image inpainting
 
 ### Training
 
-1. **Download the dataset:**
-   [https://drive.google.com/drive/folders/1fxrBKYsuFCT6NI2pPgWQN9NloqSdCfMg?usp=drive_link]
+1. **Download the dataset:** [Images](https://www.kaggle.com/datasets/badasstechie/celebahq-resized-256x256) and [Masks](https://www.kaggle.com/datasets/mnase01/nvidia-irregular-masks)
 
 2. **Data Setup:** Place the downloaded dataset folders under the `dataset` directory, like so:
   
@@ -32,7 +31,9 @@ Frequency/dataset/
 
 ### Inference
 
-1. **Acquire the samples:** Either separate the masks into proportions (make sure you're only using last three thousand test images), or download a set of medium-sized images and corresponding masks (in the range of 0.2-0.4) using the same dataset link as above. If inferencing the whole dataset, make sure to uncomment and use the lines in test.py which split the dataset.
+1. **Acquire the samples:**  
+
+Either separate the masks into proportions (make sure you're only using last three thousand test images to prevent data leakage, training used the default index), or download a set of medium-sized images and corresponding masks (in the range of 0.2-0.4) using this [sample](https://drive.google.com/drive/folders/1fxrBKYsuFCT6NI2pPgWQN9NloqSdCfMg?usp=drive_link). If inferencing the whole dataset, make sure to uncomment and use the lines in test.py which split the dataset.
 
 2. **Place Data in Dataset Folder:** Place these images and masks under the `dataset` directory.
 
