@@ -1,6 +1,17 @@
 # Frequency Deformable Multi-Head Attention
 
-This project provides two main implementations for image inpainting: **Simplified** and **Frequency**. They are primarily composed of altered decoder blocks, pursuing efficiency and performance improvements.
+This project involves solving image inpainting, or filling corrupted images with plausible content, for the CelebAHQ dataset. The resulting network is a compact 3.5 million parameter U net architecture with an added frequency processing component in the decoder side:  
+![Image](images/FrequencyUpdate.png)  
+
+![Image](images/FinalArch.png)  
+
+Here are some of the examples of inference of the current model. On the left there is an input image (with the mask applied), inpainted image in the middle and model output is on the right.
+
+![Image](images/f1.png)  
+
+![Image](images/f2.png)  
+
+The original dissertation contains two main implementations for image inpainting: **Simplified** and **Frequency**. In this repository, only the Frequency approach is present, with the specific combination of the overall network and added frequency processing component.
 
 ### Training
 
@@ -8,14 +19,9 @@ This project provides two main implementations for image inpainting: **Simplifie
    [https://drive.google.com/drive/folders/1fxrBKYsuFCT6NI2pPgWQN9NloqSdCfMg?usp=drive_link]
 
 2. **Data Setup:** Place the downloaded dataset folders under the `dataset` directory, like so:
-
-Simplified/dataset/
-
-or
-
-Frequency/dataset/
-
-
+  
+Frequency/dataset/  
+  
 3. **Possible further Adjustments:** Consider fitting the hyperparameters to match your exact setup. For instance, if you have a GPU with >40GB VRAM, consider changing the learning rate accordingly.
 
 

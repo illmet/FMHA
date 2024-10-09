@@ -9,29 +9,28 @@ class MDTA(nn.Module):
         super(MDTA, self).__init__()
         self.num_heads = num_heads
         self.temperature = nn.Parameter(torch.ones(1, num_heads, 1, 1))
-        self.qkv = nn.Conv2d(channels, channels * 3, kernel_size=1, bias=False)
-        self.qkv_conv = nn.Conv2d(channels * 3, channels * 3, kernel_size=3, padding=1, groups=channels * 3, bias=False)
+        self.kv1 = nn.Conv2d(channels, channels * 2, kernel_size=1, bias=False)
+        self.kv_conv1 = DeformableConv2d(channels * 2, channels * 2, kernel_size=3, padding=1, bias=False)        
+        #self.qkv = nn.Conv2d(channels, channels * 3, kernel_size=1, bias=False)
+        #self.qkv_conv = DeformableConv2d(channels * 3, channels * 3, kernel_size=3, padding=1, bias=False) 
         self.project_out = nn.Conv2d(channels, channels, kernel_size=1, bias=False)
     
         #frequency
-    
-        self.kv = nn.Conv2d(channels, channels * 2, kernel_size=1, bias=False)
+        self.kv2 = nn.Conv2d(channels, channels * 2, kernel_size=1, bias=False)
+        self.kv_conv2 = DeformableConv2d(channels * 2, channels * 2, kernel_size=3, padding=1, bias=False)
         self.q1X1_1 = nn.Conv2d(channels, channels , kernel_size=1, bias=False)
         self.q1X1_2 = nn.Conv2d(channels, channels , kernel_size=1, bias=False)
-        self.kv_conv = nn.Conv2d(channels * 2, channels * 2, kernel_size=3, padding=1, groups=channels * 2, bias=False)
         self.project_outf = nn.Conv2d(channels, channels, kernel_size=1, bias=False)
 
-
-
-    def forward(self, x, skip):
+    def forward(self, x, q):
         #first attention calculation and concatenation
         b, c, h, w = x.shape
-        q, k, v = self.qkv_conv(self.qkv(x)).chunk(3, dim=1)
+        k, v = self.kv_conv1(self.kv1(x)).chunk(2, dim=1)
         q = q.reshape(b, self.num_heads, -1, h * w)
         k = k.reshape(b, self.num_heads, -1, h * w)
         v = v.reshape(b, self.num_heads, -1, h * w)
         q, k = F.normalize(q, dim=-1), F.normalize(k, dim=-1)
-        attn = torch.softmax(torch.matmul(q, k.transpose(-2, -1).contiguous()) * self.temperature, dim=-1)
+        attn = torch.softmax(torch.matmul(q, k.transpose(-2, -1)), dim=-1)
         out = self.project_out(torch.matmul(attn, v).reshape(b, -1, h, w))
   
         #FDFP
@@ -41,14 +40,15 @@ class MDTA(nn.Module):
         x_fft3=self.q1X1_2(x_fft2)
         qf=fft.ifftn(x_fft3,dim=(-2, -1)).real
 
-        kf, vf = self.kv_conv(self.kv(out)).chunk(2, dim=1)
+        #second (frequency) attention calculation and concatenation
+        kf, vf = self.kv_conv2(self.kv2(out)).chunk(2, dim=1)
         qf = qf.reshape(b, self.num_heads, -1, h * w)
         kf = kf.reshape(b, self.num_heads, -1, h * w)
         vf = vf.reshape(b, self.num_heads, -1, h * w)
         qf, kf = F.normalize(qf, dim=-1), F.normalize(kf, dim=-1)
         attnf = torch.softmax(torch.matmul(qf, k.transpose(-2, -1).contiguous()) * self.temperature, dim=-1)
-        outf = self.project_outf(torch.matmul(attn, vf).reshape(b, -1, h, w))
-        return outf, skip
+        outf = self.project_outf(torch.matmul(attnf, vf).reshape(b, -1, h, w))
+        return outf, qf
 
 class Nested_MDTA(nn.Module):
     def __init__(self, channels, num_heads):
@@ -83,7 +83,6 @@ class LunaTransformerEncoderLayer(nn.Module):
         self.feed_forward = GDFN(channels, expansion_factor)
         self.packed_context_layer_norm = nn.LayerNorm(channels)
         self.unpacked_context_layer_norm = nn.LayerNorm(channels)
-        # self.unpacked_context_layer_norm = nn.LayerNorm(channels)
         self.feed_forward_layer_norm = nn.LayerNorm(channels)
 
     def forward(self, x, p):
@@ -166,8 +165,6 @@ class DeformableConv2d(nn.Module):
                                       bias=bias)
 
     def forward(self, x):
-        #h, w = x.shape[2:]
-        #max_offset = max(h, w)/4.
 
         offset = self.offset_conv(x)#.clamp(-max_offset, max_offset)
         modulator = 2. * torch.sigmoid(self.modulator_conv(x))
@@ -197,7 +194,6 @@ class GatedConv2dWithActivation(torch.nn.Module):
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight)
     def gated(self, mask):
-        #return torch.clamp(mask, -1, 1)
         return self.sigmoid(mask)
     def forward(self, input):
         x = self.conv2d(input)
@@ -222,36 +218,6 @@ class GatedDeConv2dWithActivation(torch.nn.Module):
         return self.conv2d(x)
 
 
-class res_bottleneck(nn.Module):
-    def __init__(self, in_ch, num_heads, expansion_factor = 2.21):
-        super(res_bottleneck, self).__init__()
-
-
-        self.res_block1 = LunaTransformerEncoderLayer(in_ch, num_heads, expansion_factor)
-        self.res_block2 = LunaTransformerEncoderLayer(in_ch, num_heads, expansion_factor)
-        self.res_block3 = LunaTransformerEncoderLayer(in_ch, num_heads, expansion_factor)
-        self.res_block4 = LunaTransformerEncoderLayer(in_ch, num_heads, expansion_factor)
-        self.res_block5 = LunaTransformerEncoderLayer(in_ch, num_heads, expansion_factor)
-        self.res_last = nn.Conv2d(in_ch*2, in_ch, kernel_size=1, bias=False)
-
-    def forward(self, x):
-
-        res1, res1_p1 = self.res_block1(x,x)
-
-        res2, res1_p2 = self.res_block2(res1, res1_p1)
-
-        res3 , res1_p3= self.res_block3(res2+res1, res1_p2+res1_p1)
-
-        res4, res1_p4 = self.res_block4(res3+res2+res1 , res1_p3+res1_p2+res1_p1)
-
-        res5, res1_p5 = self.res_block5(res4+res3+res2+res1, res1_p4+res1_p3+res1_p2+res1_p1)
-
-        res = torch.cat([res5, res1_p5], axis = 1)
-        out = self.res_last(res)
-
-        return out
-
-
 class Luna_Net(nn.Module):
     def __init__(self, in_channels, out_channels, factor):
         super(Luna_Net, self).__init__()
@@ -264,7 +230,7 @@ class Luna_Net(nn.Module):
         self.Conv5 = GatedConv2dWithActivation(512//factor, 1024//factor,  kernel_size=3, stride = 2, padding=1)
 
         self.dil_conv1 = GatedConv2dWithActivation(1024//factor, 1024//factor, kernel_size=3,  stride = 1, padding=1)
-        #self.dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
         #self.dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
         #self.dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
 
@@ -291,7 +257,7 @@ class Luna_Net(nn.Module):
         self.p2_Conv5 = GatedConv2dWithActivation(512//factor, 1024//factor,  kernel_size=3, stride = 2, padding=1)
 
         self.p2_dil_conv1 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
-        #self.p2_dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
+        self.p2_dil_conv2 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
         #self.p2_dil_conv3 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
         #self.p2_dil_conv4 = GatedConv2dWithActivation(1024//factor, 1024//factor,  kernel_size=3, stride = 1, padding=1)
 
@@ -331,12 +297,12 @@ class Luna_Net(nn.Module):
         x5 = self.Conv5(x4)
         #print(f"Fifth Convolution: {type(x5), x5.shape}")
         dil1 = self.dil_conv1(x5)
-        #dil2 = self.dil_conv2(dil1)
+        dil2 = self.dil_conv2(dil1)
         #dil3 = self.dil_conv3(dil2)
         #dil4 = self.dil_conv4(dil3)
 
         #decoding + concat path
-        d5 = self.Up5(dil1)
+        d5 = self.Up5(dil2)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_conv5(d5)
         
@@ -367,31 +333,42 @@ class Luna_Net(nn.Module):
         p2_x5 = self.p2_Conv5(p2_x4)
 
         p2_dil1 = self.p2_dil_conv1(p2_x5)
-        #p2_dil2 = self.p2_dil_conv2(p2_dil1)
+        p2_dil2 = self.p2_dil_conv2(p2_dil1)
         #p2_dil3 = self.p2_dil_conv3(p2_dil2)
         #p2_dil4 = self.p2_dil_conv4(p2_dil3)
 
         # decoding + concat path
         p2_d5 = self.p2_Up5(p2_dil1)
+        #print(f"p2_d5: {p2_d5.shape}")
+        #print(f"p2_x4: {p2_x4.shape}")
         o2_x4_skip, p2_x4_skip = self.gmlp_attn1(p2_d5, p2_x4)
         p2_d5 = torch.cat((o2_x4_skip, p2_x4_skip),dim=1)
         p2_d5 = self.p2_Up_conv5(p2_d5)
         
+
         p2_d4 = self.p2_Up4(p2_d5)
+        #print(f"p2_d4: {p2_d4.shape}")
+        #print(f"p2_x3: {p2_x3.shape}")
         o2_x3_skip, p2_x3_skip = self.gmlp_attn2(p2_d4, p2_x3)
         p2_d4 = torch.cat((o2_x3_skip, p2_x3_skip),dim=1)
         p2_d4 = self.p2_Up_conv4(p2_d4)
 
         p2_d3 = self.p2_Up3(p2_d4)
+        #print(f"p2_d3: {p2_d3.shape}")
+        #print(f"p2_x2: {p2_x2.shape}")
         o2_x2_skip, p2_x2_skip = self.gmlp_attn3(p2_d3, p2_x2)
         p2_d3 = torch.cat((o2_x2_skip, p2_x2_skip),dim=1)
         p2_d3 = self.p2_Up_conv3(p2_d3)
 
         p2_d2 = self.p2_Up2(p2_d3)
+        #print(f"p2_d2: {p2_d2.shape}")
+        #print(f"p2_x1: {p2_x1.shape}")
         o2_x1_skip, p2_x1_skip = self.gmlp_attn4(p2_d2, p2_x1)
         p2_d2 = torch.cat((o2_x1_skip, p2_x1_skip),dim=1)
         p2_d2 = self.p2_Up_conv2(p2_d2)
+        #print(f"p2_d2: {p2_d2.shape}")
 
         p2_d1 = self.p2_Conv_1x1(p2_d2)
+        #print(f"p2_d1: {p2_d1.shape}")
 
         return d1, p2_d1
