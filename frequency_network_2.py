@@ -165,8 +165,6 @@ class DeformableConv2d(nn.Module):
                                       bias=bias)
 
     def forward(self, x):
-        #h, w = x.shape[2:]
-        #max_offset = max(h, w)/4.
 
         offset = self.offset_conv(x)#.clamp(-max_offset, max_offset)
         modulator = 2. * torch.sigmoid(self.modulator_conv(x))
@@ -196,7 +194,6 @@ class GatedConv2dWithActivation(torch.nn.Module):
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight)
     def gated(self, mask):
-        #return torch.clamp(mask, -1, 1)
         return self.sigmoid(mask)
     def forward(self, input):
         x = self.conv2d(input)

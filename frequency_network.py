@@ -41,7 +41,6 @@ class MDTA(nn.Module):
         x_fft3=self.q1X1_2(x_fft2)
         qf=fft.ifftn(x_fft3,dim=(-2, -1)).real
 
-        #idk???
         kf, vf = self.kv_conv(self.kv(out)).chunk(2, dim=1)
         qf = qf.reshape(b, self.num_heads, -1, h * w)
         kf = kf.reshape(b, self.num_heads, -1, h * w)
