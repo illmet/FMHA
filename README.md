@@ -1,6 +1,7 @@
 # Frequency Deformable Multi-Head Attention
 
-This project involves solving image inpainting, or filling corrupted images with plausible content, for the CelebAHQ dataset. The resulting network is a compact 3.5 million parameter U net architecture with an added frequency processing component in the decoder side:  
+This project involves solving image inpainting, or filling corrupted images with plausible content, for the CelebAHQ dataset. The resulting network is a compact 3.5 million parameter U net architecture: 
+
 ![Image](images/FrequencyUpdate.png)  
 
 ![Image](images/FinalArch.png)  
